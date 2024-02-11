@@ -1,4 +1,4 @@
-use crate::libyaml::{emitter, error as libyaml};
+use crate::libyaml::error as libyaml;
 use crate::path::Path;
 use serde::{de, ser};
 use std::error::Error as StdError;
@@ -138,15 +138,6 @@ impl From<libyaml::Error> for Error {
     }
 }
 
-impl From<emitter::Error> for Error {
-    fn from(err: emitter::Error) -> Self {
-        match err {
-            emitter::Error::Libyaml(err) => Self::from(err),
-            emitter::Error::Io(err) => new(ErrorImpl::Io(err)),
-        }
-    }
-}
-
 impl StdError for Error {
     fn source(&self) -> Option<&(dyn StdError + 'static)> {
         self.0.source()
@@ -198,7 +189,7 @@ impl ErrorImpl {
             ErrorImpl::Message(_, Some(Pos { mark, path: _ }))
             | ErrorImpl::RecursionLimitExceeded(mark)
             | ErrorImpl::UnknownAnchor(mark) => Some(*mark),
-            ErrorImpl::Libyaml(err) => Some(err.mark()),
+            ErrorImpl::Libyaml(err) => err.mark(),
             ErrorImpl::Shared(err) => err.mark(),
             _ => None,
         }
